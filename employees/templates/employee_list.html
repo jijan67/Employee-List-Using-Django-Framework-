@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee List</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #f8f9fa;
+            padding: 20px;
+            height: 100vh;
+            border-right: 2px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        .sidebar .logo {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .sidebar .menu {
+            flex: 1;
+        }
+        .sidebar .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            transition: background-color 0.3s, transform 0.3s;
+            text-decoration: none;
+            color: #000;
+        }
+        .sidebar .menu-item:hover {
+            background-color: #e9ecef;
+            transform: scale(1.05);
+        }
+        .sidebar .menu-item i {
+            margin-right: 10px;
+        }
+        .sidebar .menu-item span {
+            font-size: 1rem;
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+            background-color: #ffffff;
+        }
+        .header {
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .header h1 {
+            font-size: 2rem;
+            text-align: center;
+            position: relative;
+            color: #343a40;
+            margin: 0;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+        .header::after {
+            content: '';
+            display: block;
+            height: 5px;
+            background: #007bff;
+            width: 50%;
+            margin: 10px auto;
+            border-radius: 2px;
+            animation: slideIn 1s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { width: 0; }
+            to { width: 50%; }
+        }
+        .table th, .table td {
+            vertical-align: middle;
+        }
+        .table td img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .action-buttons a {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        .action-buttons .btn-edit {
+            color: green;
+        }
+        .action-buttons .btn-delete {
+            color: red;
+        }
+        .action-buttons a:hover {
+            color: #0056b3;
+        }
+        .pagination {
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">My App</div>
+        <div class="menu">
+            <a href="#" class="menu-item">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="{% url 'employee_list' %}" class="menu-item">
+                <i class="fas fa-users"></i>
+                <span>Employees</span>
+            </a>
+            <a href="{% url 'employee_add' %}" class="menu-item">
+                <i class="fas fa-user-plus"></i>
+                <span>Add Employee</span>
+            </a>
+        </div>
+    </div>
+    <div class="content">
+        <div class="header">
+            <h1>Employees</h1>
+        </div>
+        
+        <!-- Search Form -->
+        <form method="get" action="" class="form-inline justify-content-center mb-3">
+            <input type="text" name="search" class="form-control mr-2" placeholder="Search by Name or Email" value="{{ request.GET.search }}">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+
+        <!-- Employee Table -->
+        <table class="table table-striped table-bordered">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Photo</th>
+                    <th><a href="?sort=first_name">Full Name</a></th>
+                    <th><a href="?sort=email">Email</a></th>
+                    <th>Mobile</th>
+                    <th><a href="?sort=date_of_birth">Date of Birth</a></th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for employee in page_obj %}
+                <tr>
+                    <td>
+                        <img src="{{ employee.photo.url }}" alt="Employee Photo">
+                    </td>
+                    <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+                    <td>{{ employee.email }}</td>
+                    <td>{{ employee.mobile }}</td>
+                    <td>{{ employee.date_of_birth }}</td>
+                    <td class="action-buttons">
+                        <a href="{% url 'employee_edit' employee.id %}" title="Edit" class="btn-edit"><i class="fas fa-edit"></i></a>
+                        <a href="{% url 'employee_delete' employee.id %}" title="Delete" class="btn-delete"><i class="fas fa-trash"></i></a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No employees found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Bootstrap JS, Popper.js, and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
